@@ -57,4 +57,6 @@ public class Abrigo {
         return email;
     }
 
+    public void setId(String number) {
+    }
 }

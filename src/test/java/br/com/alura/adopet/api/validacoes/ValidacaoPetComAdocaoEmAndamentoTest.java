@@ -50,7 +50,7 @@ class ValidacaoPetComAdocaoEmAndamentoTest {
                 .willReturn(true);
 
 
-        Assertions.assertThrows(ValidacaoException.class,() -> validacao.validar(dto));
+        Assertions.assertThrows(ValidacaoException.class, () -> validacao.validar(dto));
     }
 
 }

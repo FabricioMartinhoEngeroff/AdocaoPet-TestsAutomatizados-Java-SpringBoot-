@@ -32,7 +32,7 @@ class CalculadoraProbabilidadeAdocaoTest {
         CalculadoraProbabilidadeAdocao calculadora = new CalculadoraProbabilidadeAdocao();
         ProbabilidadeAdocao probabilidade = calculadora.calcular(pet);
 
-        Assertions.assertEquals(ProbabilidadeAdocao.ALTA,probabilidade);
+        Assertions.assertEquals(ProbabilidadeAdocao.ALTA, probabilidade);
 
     }
 
@@ -57,7 +57,7 @@ class CalculadoraProbabilidadeAdocaoTest {
         CalculadoraProbabilidadeAdocao calculadora = new CalculadoraProbabilidadeAdocao();
         ProbabilidadeAdocao probabilidade = calculadora.calcular(pet);
 
-        Assertions.assertEquals(ProbabilidadeAdocao.MEDIA,probabilidade);
+        Assertions.assertEquals(ProbabilidadeAdocao.MEDIA, probabilidade);
 
     }
 }

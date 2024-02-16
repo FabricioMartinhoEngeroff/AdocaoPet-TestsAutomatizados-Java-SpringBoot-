@@ -13,9 +13,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
@@ -32,7 +30,7 @@ class TutorServiceTest {
 
     @Test
     void deveriaCadastrarUmTutor() {
-        CadastroTutorDto dto = new CadastroTutorDto("Joao", "5135347788","joao@gmail.com");
+        CadastroTutorDto dto = new CadastroTutorDto("Joao", "5135347788", "joao@gmail.com");
 
         given(tutorRepository.existsByTelefoneOrEmail(dto.telefone(), dto.email())).willReturn(false);
 
@@ -47,7 +45,7 @@ class TutorServiceTest {
 
     @Test
     void naoDeveriaCadastrarUmTutorComDadosJaCadastrados() {
-        CadastroTutorDto dto = new CadastroTutorDto("Joao", "5135347788","joao@gmail.com");
+        CadastroTutorDto dto = new CadastroTutorDto("Joao", "5135347788", "joao@gmail.com");
 
         given(tutorRepository.existsByTelefoneOrEmail(dto.telefone(), dto.email())).willReturn(true);
 
@@ -58,10 +56,10 @@ class TutorServiceTest {
 
     @Test
     void deveriaAtualizarUmTutor() {
-        CadastroTutorDto cadastroDto = new CadastroTutorDto("Joao", "5135347788","joao@gmail.com");
+        CadastroTutorDto cadastroDto = new CadastroTutorDto("Joao", "5135347788", "joao@gmail.com");
         Tutor tutor = new Tutor(cadastroDto);
 
-        AtualizacaoTutorDto atualizacaoDto = new AtualizacaoTutorDto(1L, "Joao Atualizado", "5135347789","joao_atualizado@gmail.com");
+        AtualizacaoTutorDto atualizacaoDto = new AtualizacaoTutorDto(1L, "Joao Atualizado", "5135347789", "joao_atualizado@gmail.com");
 
         given(tutorRepository.getReferenceById(atualizacaoDto.id())).willReturn(tutor);
 
