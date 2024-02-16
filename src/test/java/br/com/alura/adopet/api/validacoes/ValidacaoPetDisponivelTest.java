@@ -29,24 +29,20 @@ class ValidacaoPetDisponivelTest {
     @Test
     void deveriaPermitirSolicitacaoDeAdocaoPet(){
 
-        //ARRANGE
         BDDMockito.given(petRepository.getReferenceById(dto.idPet())).willReturn(pet);
         BDDMockito.given(pet.getAdotado()).willReturn(false);
 
 
-        //ASSERT + ACT
         Assertions.assertDoesNotThrow(() -> validacao.validar(dto));
     }
 
     @Test
     void naoDeveriaPermitirSolicitacaoDeAdocaoPet(){
 
-        //ARRANGE
         BDDMockito.given(petRepository.getReferenceById(dto.idPet())).willReturn(pet);
         BDDMockito.given(pet.getAdotado()).willReturn(true);
 
 
-        //ASSERT + ACT
         Assertions.assertThrows(ValidacaoException.class,() -> validacao.validar(dto));
     }
 }

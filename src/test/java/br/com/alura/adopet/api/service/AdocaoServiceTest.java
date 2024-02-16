@@ -1,5 +1,7 @@
 package br.com.alura.adopet.api.service;
 
+import br.com.alura.adopet.api.dto.AprovacaoAdocaoDto;
+import br.com.alura.adopet.api.dto.ReprovacaoAdocaoDto;
 import br.com.alura.adopet.api.dto.SolicitacaoAdocaoDto;
 import br.com.alura.adopet.api.model.Abrigo;
 import br.com.alura.adopet.api.model.Adocao;
@@ -15,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,10 +28,10 @@ import static org.mockito.BDDMockito.then;
 class AdocaoServiceTest {
 
     @InjectMocks
-    private AdocaoService service;
+    private AdocaoService adocaoService;
 
     @Mock
-    private AdocaoRepository repository;
+    private AdocaoRepository adocaoRepository;
 
     @Mock
     private PetRepository petRepository;
@@ -58,19 +61,25 @@ class AdocaoServiceTest {
 
     private SolicitacaoAdocaoDto dto;
 
+    private AprovacaoAdocaoDto dto2;
+
+    private ReprovacaoAdocaoDto dto3;
+    @Mock
+    private Adocao adocao;
+
     @Captor
     private ArgumentCaptor<Adocao> adocaoCaptor;
 
     @Test
-    void deveriaSalvarAdocaoAoSolicitar(){
-        this.dto = new SolicitacaoAdocaoDto(10l,20l,"motivo qualquer");
+    void deveriaSalvarAdocaoAoSolicitar() {
+        this.dto = new SolicitacaoAdocaoDto(10l, 20l, "motivo qualquer");
         given(petRepository.getReferenceById(dto.idPet())).willReturn(pet);
         given(tutorRepository.getReferenceById(dto.idTutor())).willReturn(tutor);
         given(pet.getAbrigo()).willReturn(abrigo);
 
-        service.solicitar(dto);
+        adocaoService.solicitar(dto);
 
-        then(repository).should().save(adocaoCaptor.capture());
+        then(adocaoRepository).should().save(adocaoCaptor.capture());
         Adocao adocaoSalva = adocaoCaptor.getValue();
         Assertions.assertEquals(pet, adocaoSalva.getPet());
         Assertions.assertEquals(tutor, adocaoSalva.getTutor());
@@ -78,18 +87,51 @@ class AdocaoServiceTest {
     }
 
     @Test
-    void deveriaChamarValidadoreDeAdocaoAoSolicitar(){
-        this.dto = new SolicitacaoAdocaoDto(10l,20l,"motivo qualquer");
+    void deveriaChamarValidadoreDeAdocaoAoSolicitar() {
+        this.dto = new SolicitacaoAdocaoDto(10l, 20l, "motivo qualquer");
         given(petRepository.getReferenceById(dto.idPet())).willReturn(pet);
         given(tutorRepository.getReferenceById(dto.idTutor())).willReturn(tutor);
         given(pet.getAbrigo()).willReturn(abrigo);
         validacoes.add(validador1);
         validacoes.add(validador2);
 
-        service.solicitar(dto);
+        adocaoService.solicitar(dto);
 
         BDDMockito.then(validador1).should().validar(dto);
         BDDMockito.then(validador2).should().validar(dto);
+    }
+
+    @Test
+    void deveriaAprovarAdocao() {
+        this.dto2 = new AprovacaoAdocaoDto(10L);
+        given(adocaoRepository.getReferenceById(dto2.idAdocao())).willReturn(adocao);
+        given(adocao.getPet()).willReturn(pet);
+        given(adocao.getTutor()).willReturn(tutor);
+        given(pet.getAbrigo()).willReturn(abrigo);
+
+        LocalDateTime dataAdocao = LocalDateTime.now();
+        given(adocao.getData()).willReturn(dataAdocao);
+
+        adocaoService.aprovar(dto2);
+
+        then(adocao).should().marcarComoAprovada();
+    }
+
+    @Test
+    void deveriaReprovarAdocao() {
+        this.dto3 = new ReprovacaoAdocaoDto(1L, "Tutor tem algo errado na sua Adocão verifique-se");
+        given(adocaoRepository.getReferenceById(dto3.idAdocao())).willReturn(adocao);
+        given(adocao.getPet()).willReturn(pet);
+        given(adocao.getTutor()).willReturn(tutor);
+        given(pet.getAbrigo()).willReturn(abrigo);
+
+
+        LocalDateTime dataAdocao = LocalDateTime.now();
+        given(adocao.getData()).willReturn(dataAdocao);
+
+        adocaoService.reprovar(dto3);
+
+        then(adocao).should().marcarComoReprovada(dto3.justificativa());
     }
 
 }
