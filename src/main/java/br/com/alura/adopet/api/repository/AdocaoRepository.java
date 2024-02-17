@@ -8,4 +8,7 @@ public interface AdocaoRepository extends JpaRepository<Adocao, Long> {
 
     boolean existsByPetIdAndStatus(Long idPet, StatusAdocao status);
 
+    boolean existsByTutorIdAndStatus(Long tutorId, StatusAdocao status);
+
+
 }

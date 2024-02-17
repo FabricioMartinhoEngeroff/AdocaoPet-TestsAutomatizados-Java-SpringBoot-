@@ -2,16 +2,17 @@ package br.com.alura.adopet.api.validacoes;
 
 import br.com.alura.adopet.api.dto.SolicitacaoAdocaoDto;
 import br.com.alura.adopet.api.exception.ValidacaoException;
-import br.com.alura.adopet.api.model.Pet;
 import br.com.alura.adopet.api.model.StatusAdocao;
 import br.com.alura.adopet.api.repository.AdocaoRepository;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.BDDMockito;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.BDDMockito.given;
 
 @ExtendWith(MockitoExtension.class)
 class ValidacaoPetComAdocaoEmAndamentoTest {
@@ -20,10 +21,7 @@ class ValidacaoPetComAdocaoEmAndamentoTest {
     private AdocaoRepository adocaoRepository;
 
     @InjectMocks
-    private ValidacaoPetComAdocaoEmAndamento validacao;
-
-    @Mock
-    private Pet pet;
+    private ValidacaoPetComAdocaoEmAndamento validador;
 
     @Mock
     private SolicitacaoAdocaoDto dto;
@@ -32,25 +30,25 @@ class ValidacaoPetComAdocaoEmAndamentoTest {
     @Test
     void deveriaValidarAdocaoDoPet() {
 
-        Long idPet = 1L;
-        BDDMockito.given(dto.idPet()).willReturn(idPet);
-        BDDMockito.given(adocaoRepository.existsByPetIdAndStatus(idPet, StatusAdocao.AGUARDANDO_AVALIACAO))
-                .willReturn(false);
+        given(adocaoRepository.existsByPetIdAndStatus(
+                dto.idPet(),
+                StatusAdocao.AGUARDANDO_AVALIACAO
+        )).willReturn(false);
 
-
-        Assertions.assertDoesNotThrow(() -> validacao.validar(dto));
+        assertDoesNotThrow(()->validador.validar(dto));
     }
+
 
     @Test
     void naoDeveriaValidarAdocaoDoPet() {
 
-        Long idPet = 1L;
-        BDDMockito.given(dto.idPet()).willReturn(idPet);
-        BDDMockito.given(adocaoRepository.existsByPetIdAndStatus(idPet, StatusAdocao.AGUARDANDO_AVALIACAO))
-                .willReturn(true);
+        given(adocaoRepository.existsByPetIdAndStatus(
+                dto.idPet(),
+                StatusAdocao.AGUARDANDO_AVALIACAO)
+        ).willReturn(true);
 
-
-        Assertions.assertThrows(ValidacaoException.class, () -> validacao.validar(dto));
+        assertThrows(ValidacaoException.class, () -> validador.validar(dto));
     }
 
 }
+

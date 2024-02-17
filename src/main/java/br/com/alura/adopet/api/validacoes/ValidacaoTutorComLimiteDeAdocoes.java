@@ -22,6 +22,8 @@ public class ValidacaoTutorComLimiteDeAdocoes implements ValidacaoSolicitacaoAdo
     private TutorRepository tutorRepository;
 
     public void validar(SolicitacaoAdocaoDto dto) {
+        validarAdocaoEmAndamento(dto.idTutor());
+
         List<Adocao> adocoes = adocaoRepository.findAll();
         Tutor tutor = tutorRepository.getReferenceById(dto.idTutor());
         int contador = 0;
@@ -34,4 +36,11 @@ public class ValidacaoTutorComLimiteDeAdocoes implements ValidacaoSolicitacaoAdo
             throw new ValidacaoException("Tutor chegou ao limite máximo de 5 adoções!");
         }
     }
+
+    private void validarAdocaoEmAndamento(Long idTutor) {
+        if (adocaoRepository.existsByTutorIdAndStatus(idTutor, StatusAdocao.AGUARDANDO_AVALIACAO)) {
+            throw new ValidacaoException("Não é permitido solicitar uma adoção enquanto houver uma adoção em andamento.");
+        }
+    }
 }
+

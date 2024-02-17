@@ -2,11 +2,13 @@ package br.com.alura.adopet.api.controller;
 
 import br.com.alura.adopet.api.dto.AbrigoDto;
 import br.com.alura.adopet.api.dto.CadastroPetDto;
+import br.com.alura.adopet.api.dto.PetDto;
+import br.com.alura.adopet.api.exception.ValidacaoException;
 import br.com.alura.adopet.api.model.Abrigo;
 import br.com.alura.adopet.api.model.TipoPet;
 import br.com.alura.adopet.api.service.AbrigoService;
 import br.com.alura.adopet.api.service.PetService;
-import org.junit.jupiter.api.Assertions;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,14 +16,18 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -36,9 +42,24 @@ class AbrigoControllerTest {
     private AbrigoService abrigoService;
 
     @MockBean
+    private Abrigo abrigo;
+
+    @MockBean
     private PetService petService;
     @Autowired
     private MockMvc mvc;
+
+    @Test
+    void deveriaDevolverCodigo200ParaRequisicaoDeListarAbrigos() throws Exception {
+        //ACT
+
+        MockHttpServletResponse response = mvc.perform(
+                get("/abrigos")
+        ).andReturn().getResponse();
+
+        //ASSERT
+        assertEquals(200, response.getStatus());
+    }
 
     @Test
     public void deveriaListarAbrigosComSucesso() throws Exception {
@@ -55,6 +76,30 @@ class AbrigoControllerTest {
     }
 
     @Test
+    void deveriaDevolverCodigo200ParaRequisitoDeListaPetsDosAbrigosPorNome() throws Exception {
+
+        String nome = "Adocao Joana";
+
+        MockHttpServletResponse response = mvc.perform(
+                get("/abrigos/{nome}/pets", nome)
+        ).andReturn().getResponse();
+
+        assertEquals(200, response.getStatus());
+    }
+
+    @Test
+    void deveriaDevolverCodigo200ParaRequisitoDeListaPetsDosAbrigosPorId() throws Exception {
+
+        String id = "1";
+
+        MockHttpServletResponse response = mvc.perform(
+                get("/abrigos/{nome}/pets", id)
+        ).andReturn().getResponse();
+
+        assertEquals(200, response.getStatus());
+    }
+
+    @Test
     public void deveriaRetornarListaVaziaQuandoNaoHouverAbrigos() throws Exception {
 
         when(abrigoService.listar()).thenReturn(Collections.emptyList());
@@ -67,82 +112,127 @@ class AbrigoControllerTest {
 
 
     @Test
-void deveriaDevolverCodigo400ParaCadastroComErro() throws Exception {
+    void deveriaDevolverCodigo400ParaCadastroDeAbrigoComErro() throws Exception {
 
-    String json = "{}";
+        String json = "{}";
 
-    var response = mvc.perform(
-            post("/abrigos")
-                    .content(json)
-                    .contentType(MediaType.APPLICATION_JSON)
-    ).andReturn().getResponse();
+        var response = mvc.perform(
+                post("/abrigos")
+                        .content(json)
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andReturn().getResponse();
 
-    Assertions.assertEquals(400, response.getStatus());
+        assertEquals(400, response.getStatus());
+    }
+
+    @Test
+    void deveriaDevolverCodigo200ParaCadastroDeAbrigo() throws Exception {
+
+        String json = """
+                {
+                      "nome": "AbrigoJoana",
+                    "telefone": "5135457555",
+                    "email": "joana@gmail.com"
+                }
+                """;
+
+        var response = mvc.perform(
+                post("/abrigos")
+                        .content(json)
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andReturn().getResponse();
+
+        assertEquals(200, response.getStatus());
+    }
+
+    @Test
+    void deveriaDevolverCodigo400ParaCadastroPetNoAbrigo() throws Exception {
+
+        String json = "{}";
+
+
+        var response = mvc.perform(
+                post("/abrigos")
+                        .content(json)
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andReturn().getResponse();
+
+        assertEquals(400, response.getStatus());
+    }
+
+    @Test
+    void deveriaDevolverCodigo400ParaCadastroDePetInvalido() throws Exception {
+        CadastroPetDto dto = new CadastroPetDto(TipoPet.CACHORRO,  " ", "Labrador" , 3,"amarelo",-2f);
+
+        String json = new ObjectMapper().writeValueAsString(dto);
+
+        MockHttpServletResponse response = mvc.perform(
+                post("/abrigos/{idOuNome}/pets", "idOuNomeInvalido")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json)
+        ).andReturn().getResponse();
+
+        assertEquals(400, response.getStatus());
+
+    }
+
+    @Test
+    void deveriaDevolverCodigo200ParaCadastroPetNoAbrigo() throws Exception {
+        CadastroPetDto dto = new CadastroPetDto(TipoPet.CACHORRO, "Rex", "Labrador", 3, "Amarelo", 30.5f);
+        String json = """
+                {
+                "tipo": "CACHORRO",
+                "nome": "Rex",
+                "raca": "Labrador",
+                "idade": 3,
+                "cor": "Amarelo",
+                "peso": 30.5
+                }
+                """;
+
+        abrigo.setId("1");
+
+        when(abrigoService.carregarAbrigo("idOuNomeValido")).thenReturn(abrigo);
+
+        Mockito.doNothing().when(petService).cadastrarPet(any(Abrigo.class), any(CadastroPetDto.class));
+
+        var response = mvc.perform(
+                post("/abrigos/{idOuNome}/pets", "idOuNomeValido")
+                        .content(json)
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andReturn().getResponse();
+
+        assertEquals(200, response.getStatus());
+    }
+
+    @Test
+    void deveriaDevolverCodigo200ParaRequisicaoDeListarPetsDoAbrigo() throws Exception {
+
+        String nome = "Miau";
+
+        given(abrigoService.listarPetsDoAbrigo(abrigo.getNome())).willThrow(ValidacaoException.class);
+
+        MockHttpServletResponse response = mvc.perform(
+                get("/abrigos/{nome}/pets", nome)
+        ).andReturn().getResponse();
+
+
+        assertEquals(200, response.getStatus());
+    }
+
+    @Test
+    void deveriaDevolverListaDePetsParaIdValido() throws Exception {
+        long idAbrigo = 1L;
+        List<PetDto> pets = Arrays.asList(
+                new PetDto(1L, TipoPet.CACHORRO, "Rex", "Labrador", 3),
+                new PetDto(2L, TipoPet.GATO, "Miau", "Siames", 2));
+
+        given(abrigoService.listarPetsDoAbrigo(String.valueOf(idAbrigo))).willReturn(pets);
+
+        mvc.perform(get("/abrigos/{id}/pets", idAbrigo))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[{'id': 1, 'tipo': 'CACHORRO', 'nome': 'Rex', 'raca': 'Labrador', 'idade': 3}, {'id': 2, 'tipo': 'GATO', 'nome': 'Miau', 'raca': 'Siames', 'idade': 2}]"));
+    }
+
 }
 
-@Test
-void deveriaDevolverCodigo200ParaCadastroDeAbrigo() throws Exception {
-
-    String json = """
-            {
-                  "nome": "joana",
-                "telefone": "5135457555",
-                "email": "joana@gmail.com"
-            }
-            """;
-
-    var response = mvc.perform(
-            post("/abrigos")
-                    .content(json)
-                    .contentType(MediaType.APPLICATION_JSON)
-    ).andReturn().getResponse();
-
-    Assertions.assertEquals(200, response.getStatus());
-}
-
-@Test
-void deveriaDevolverCodigo400ParaCadastroPetComErro() throws Exception {
-
-    String json = "{}";
-
-    var response = mvc.perform(
-            post("/abrigos")
-                    .content(json)
-                    .contentType(MediaType.APPLICATION_JSON)
-    ).andReturn().getResponse();
-
-    Assertions.assertEquals(400, response.getStatus());
-}
-
-@Test
-void deveriaDevolverCodigo200ParaCadastroPetComSucesso() throws Exception {
-    CadastroPetDto dto = new CadastroPetDto(TipoPet.CACHORRO, "Rex", "Labrador", 3, "Amarelo", 30.5f);
-    String json = """
-            {
-            "tipo": "CACHORRO",
-            "nome": "Rex",
-            "raca": "Labrador",
-            "idade": 3,
-            "cor": "Amarelo",
-            "peso": 30.5
-            }
-            """;
-
-    // Crie um abrigo mock
-    Abrigo abrigoMock = new Abrigo();
-    abrigoMock.setId("1");
-
-    when(abrigoService.carregarAbrigo("idOuNomeValido")).thenReturn(abrigoMock);
-
-    Mockito.doNothing().when(petService).cadastrarPet(Mockito.any(Abrigo.class), Mockito.any(CadastroPetDto.class));
-
-    var response = mvc.perform(
-            post("/abrigos/{idOuNome}/pets", "idOuNomeValido")
-                    .content(json)
-                    .contentType(MediaType.APPLICATION_JSON)
-    ).andReturn().getResponse();
-
-    Assertions.assertEquals(200, response.getStatus());
-}
-
-}

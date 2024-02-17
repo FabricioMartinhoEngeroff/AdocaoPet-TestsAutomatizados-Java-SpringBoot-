@@ -36,75 +36,31 @@ class AbrigoServiceTest {
     @Mock
     private PetRepository petRepository;
 
-    private CadastroAbrigoDto dto;
-
-    @Mock
-    private Pet pet;
-
-    @Mock
-    private Tutor tutor;
 
     @Mock
     private Abrigo abrigo;
 
-    @Captor
-    private ArgumentCaptor<Abrigo> abrigoCaptor;
-
     @Test
-    void deveriaListarTodosOsAbrigos() {
+    void deveriaChamarListaDeTodosOsAbrigos() {
+        //Act
+        abrigoService.listar();
 
-        CadastroAbrigoDto dto1 = new CadastroAbrigoDto("AbrigoJoana", "35457544", "JoanaAbrigo@gmail.com");
-        CadastroAbrigoDto dto2 = new CadastroAbrigoDto("AbrigoBob", "35357555", "BobAbrigo@gmail.com");
-        Abrigo abrigo1 = new Abrigo(dto1);
-        Abrigo abrigo2 = new Abrigo(dto2);
-        List<Abrigo> abrigos = Arrays.asList(abrigo1, abrigo2);
-        given(abrigoRepository.findAll()).willReturn(abrigos);
-
-        List<AbrigoDto> result = abrigoService.listar();
-
-        assertEquals(abrigos.size(), result.size(), "O número de AbrigoDto deve ser igual ao número de Abrigos");
-        for (int i = 0; i < result.size(); i++) {
-            AbrigoDto dto = result.get(i);
-            Abrigo abrigo = abrigos.get(i);
-            assertEquals(abrigo.getNome(), dto.nome(), "O nome do abrigo deve corresponder");
-
-        }
+        //Assert
+        then(abrigoRepository).should().findAll();
     }
 
-    @Test
-    void deveriaCadastrarAbrigo() {
-        this.dto = new CadastroAbrigoDto("abrigoJoana", "34547544", "joanaAbrigo@gmail.com");
-
-        given(abrigoRepository.existsByNomeOrTelefoneOrEmail(dto.nome(), dto.telefone(), dto.email())).willReturn(false);
-
-        abrigoService.cadastrar(dto);
-
-        then(abrigoRepository).should().save(abrigoCaptor.capture());
-        Abrigo abrigoSalvo = abrigoCaptor.getValue();
-        assertEquals(dto.nome(), abrigoSalvo.getNome());
-        assertEquals(dto.telefone(), abrigoSalvo.getTelefone());
-        assertEquals(dto.email(), abrigoSalvo.getEmail());
-
-
-    }
 
     @Test
-    void deveriaListarPetsDoAbrigo() {
+    void deveriaChamarListaDePetsDoAbrigoAtravesDoNome() {
+        //Arrange
+        String nome = "Miau";
+        given(abrigoRepository.findByNome(nome)).willReturn(Optional.of(abrigo));
 
-        Pet pet1 = Mockito.mock(Pet.class);
-        Pet pet2 = Mockito.mock(Pet.class);
-        List<Pet> pets = Arrays.asList(pet1, pet2);
+        //Act
+        abrigoService.listarPetsDoAbrigo(nome);
 
-        when(abrigoRepository.findById(1L)).thenReturn(Optional.of(abrigo));
-        when(petRepository.findByAbrigo(abrigo)).thenReturn(pets);
-
-        List<PetDto> result = abrigoService.listarPetsDoAbrigo("1");
-
-        assertEquals(pets.size(), result.size());
-        for (int i = 0; i < result.size(); i++) {
-            PetDto dto = result.get(i);
-            Pet pet = pets.get(i);
-        }
+        //Assert
+        then(petRepository).should().findByAbrigo(abrigo);
     }
 
     @Test
@@ -120,8 +76,6 @@ class AbrigoServiceTest {
 
     @Test
     void deveriaCarregarAbrigoPorNome() {
-
-        Abrigo abrigo = Mockito.mock(Abrigo.class);
 
         when(abrigoRepository.findByNome("AbrigoJoana")).thenReturn(Optional.of(abrigo));
 

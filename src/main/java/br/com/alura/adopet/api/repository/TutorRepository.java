@@ -7,4 +7,6 @@ public interface TutorRepository extends JpaRepository<Tutor, Long> {
 
     boolean existsByTelefoneOrEmail(String telefone, String email);
 
+
+
 }

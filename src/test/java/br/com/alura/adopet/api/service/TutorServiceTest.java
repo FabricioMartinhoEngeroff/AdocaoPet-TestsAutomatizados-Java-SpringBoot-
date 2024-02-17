@@ -14,59 +14,55 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 
+
 @ExtendWith(MockitoExtension.class)
 class TutorServiceTest {
+
     @InjectMocks
-    private TutorService tutorService;
+    private TutorService service;
 
     @Mock
-    private TutorRepository tutorRepository;
+    private TutorRepository repository;
 
-    @Captor
-    private ArgumentCaptor<Tutor> tutorCaptor;
+    @Mock
+    private CadastroTutorDto dto;
+
+    @Mock
+    private Tutor tutor;
+
+    @Mock
+    private AtualizacaoTutorDto atualizacaoTutorDto;
 
     @Test
-    void deveriaCadastrarUmTutor() {
-        CadastroTutorDto dto = new CadastroTutorDto("Joao", "5135347788", "joao@gmail.com");
+    void NaoDeveriaCadastrarTutorTelefoneOuEmailJaCadastrado() {
 
-        given(tutorRepository.existsByTelefoneOrEmail(dto.telefone(), dto.email())).willReturn(false);
+        given(repository.existsByTelefoneOrEmail(dto.telefone(), dto.email())).willReturn(true);
 
-        tutorService.cadastrar(dto);
-
-        then(tutorRepository).should().save(tutorCaptor.capture());
-        Tutor tutorSalvo = tutorCaptor.getValue();
-        Assertions.assertEquals(dto.nome(), tutorSalvo.getNome());
-        Assertions.assertEquals(dto.telefone(), tutorSalvo.getTelefone());
-        Assertions.assertEquals(dto.email(), tutorSalvo.getEmail());
+        assertThrows(ValidacaoException.class, () -> service.cadastrar(dto));
     }
 
     @Test
-    void naoDeveriaCadastrarUmTutorComDadosJaCadastrados() {
-        CadastroTutorDto dto = new CadastroTutorDto("Joao", "5135347788", "joao@gmail.com");
+    void deveriaCadastrarTutor() {
 
-        given(tutorRepository.existsByTelefoneOrEmail(dto.telefone(), dto.email())).willReturn(true);
+        given(repository.existsByTelefoneOrEmail(dto.telefone(), dto.email())).willReturn(false);
 
-        Assertions.assertThrows(ValidacaoException.class, () -> {
-            tutorService.cadastrar(dto);
-        });
+        assertDoesNotThrow(() -> service.cadastrar(dto));
+        then(repository).should().save(new Tutor(dto));
     }
 
     @Test
-    void deveriaAtualizarUmTutor() {
-        CadastroTutorDto cadastroDto = new CadastroTutorDto("Joao", "5135347788", "joao@gmail.com");
-        Tutor tutor = new Tutor(cadastroDto);
+    void deveriaAtualizarDadosTutor() {
 
-        AtualizacaoTutorDto atualizacaoDto = new AtualizacaoTutorDto(1L, "Joao Atualizado", "5135347789", "joao_atualizado@gmail.com");
+        given(repository.getReferenceById(atualizacaoTutorDto.id())).willReturn(tutor);
 
-        given(tutorRepository.getReferenceById(atualizacaoDto.id())).willReturn(tutor);
+        service.atualizar(atualizacaoTutorDto);
 
-        tutorService.atualizar(atualizacaoDto);
-
-        Assertions.assertEquals(atualizacaoDto.nome(), tutor.getNome());
-        Assertions.assertEquals(atualizacaoDto.telefone(), tutor.getTelefone());
-        Assertions.assertEquals(atualizacaoDto.email(), tutor.getEmail());
+        then(tutor).should().atualizarDados(atualizacaoTutorDto);
     }
+
 }
